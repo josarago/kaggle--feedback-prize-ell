@@ -7,19 +7,16 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler, QuantileT
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn_transformers import (
-	FASTTEXT_MODEL_PATH,
 	FTLangdetectTransformer,
-	PooledDeBertaTransformer,
-
+	PooledDeBertaTransformer
 )
 
-from config import MSFTDeBertaV3Config
+from config import MSFTDeBertaV3Config, FASTTEXT_MODEL_PATH
 from english_utils import (
 	number_of_unigrams,
 	number_of_line_breaks,
 	get_punctuation_error_fraction
 )
-
 
 def to_series(df: pd.DataFrame) -> pd.Series:
 	assert df.shape[1] == 1
@@ -103,7 +100,7 @@ main_pipe = FeatureUnion(
 		("english_score", english_score_pipe),
 		("i_vs_I", i_pipe),
 		("bad_punctuation", bad_punctuation_pipe),
-		("tf-idf", tf_idf_pipe),
+		("tf-idf", tf_idf_pipe)
 	]
 )
 
@@ -128,6 +125,7 @@ full_pipe = FeatureUnion(
 		("pooled_deberta_pipe", pooled_deberta_pipe)
 	]
 )
+
 
 if __name__ == "__main__":
 	df = pd.DataFrame.from_dict({"full_text": [

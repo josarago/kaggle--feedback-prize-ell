@@ -13,10 +13,8 @@ from torch.utils.data import DataLoader
 
 from transformers import AutoTokenizer, AutoModel
 
-from config import MSFTDeBertaV3Config
+from config import MSFTDeBertaV3Config, FASTTEXT_MODEL_PATH
 from english_utils import clean_special_characters
-
-FASTTEXT_MODEL_PATH = "./input/fasttextmodel/lid.176.ftz"
 
 
 def ft_langdetect(text: str, fasttext_model):
@@ -35,10 +33,10 @@ def ftlangdetect_english_score(series: pd.Series, fasttext_model) -> np.array:
 	return res.apply(lambda x: x['score'] if x["lang"] == 'en' else 1 - x['score']).values.reshape(-1, 1)
 
 
-class FTLangdetectTransformer(TransformerMixin):
+class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
 	def __init__(
 			self,
-			model_path=FASTTEXT_MODEL_PATH
+			model_path
 	):
 		"""
 			This transformer outputs the predictions
@@ -68,7 +66,7 @@ class FTLangdetectTransformer(TransformerMixin):
 		return res.apply(lambda x: x['score'] if x["lang"] == 'en' else 1 - x['score']).values.reshape(-1, 1)
 
 
-class PooledDeBertaTransformer(TransformerMixin):
+class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 	def __init__(self, config, batch_inference=True):
 		self.config = config
 		self._batch_inference = batch_inference
@@ -121,8 +119,8 @@ class PooledDeBertaTransformer(TransformerMixin):
 			batch_size=self.config._inference_batch_size,
 			shuffle=False
 		)
-
-		for _series in tqdm(data_loader):
+		# for _series in tqdm(data_loader):
+		for _series in data_loader:
 			_inputs = self.prepare_input(
 				_series
 			).to(self.config.inference_device)
@@ -155,7 +153,7 @@ if __name__ == "__main__":
 		] * (n_samples // 2)
 	)
 
-	ftl_transformer = FTLangdetectTransformer()
+	ftl_transformer = FTLangdetectTransformer(model_path=FASTTEXT_MODEL_PATH)
 	y_preds = ftl_transformer.fit_transform(series)
 	print(y_preds.shape)
 
@@ -164,6 +162,7 @@ if __name__ == "__main__":
 		pooling="mean",
 		inference_device="mps",
 		output_device="cpu",
+		batch_inference=False,
 		inference_batch_size=batch_size
 	)
 
