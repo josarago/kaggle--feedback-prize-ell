@@ -166,14 +166,14 @@ class PooledDeBertaTransformer(TransformerMixin):
 		self.config = config
 		self._batch_inference = batch_inference
 		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
+		self.model = AutoModel.from_pretrained(self.config.model).to(
+			self.config.inference_device
+		)
 
 	def fit(self, X, y=None):
 		return self
 
-	def prepare_input(
-		self,
-		input_texts
-	):
+	def prepare_input(self, input_texts):
 		"""
 			this will truncate the longest essays.
 			Consider adding some sliding window logic and pooling/aggregation to capture the full text?
@@ -195,10 +195,10 @@ class PooledDeBertaTransformer(TransformerMixin):
 		return inputs
 
 	@torch.no_grad()
-	def feature(self, model, config, inputs):
-		model.eval()
+	def feature(self, inputs):
+		self.model.eval()
 		#         last_hidden_states = self.model(**{k: v.to(self.config._inference_device) for k, v, in inputs.items()})[0]
-		last_hidden_states = model(
+		last_hidden_states = self.model(
 			**{k: v.to(self.config.inference_device) for k, v, in inputs.items()}
 		).last_hidden_state
 		feature = MeanPooling()(
@@ -207,11 +207,7 @@ class PooledDeBertaTransformer(TransformerMixin):
 		)
 		return feature
 
-	def batch_transform(
-			self,
-			model,
-			series
-	):
+	def batch_transform(self, series):
 		y_preds_list = []
 		data_loader = DataLoader(
 			dataset=series,
@@ -224,22 +220,22 @@ class PooledDeBertaTransformer(TransformerMixin):
 				_series
 			).to(self.config.inference_device)
 			with torch.no_grad():
-				__y_preds = self.feature(model, self.config, _inputs)
+				__y_preds = self.feature(_inputs)
 			y_preds_list.append(__y_preds.to(self.config.output_device))
 		y_preds = np.concatenate(y_preds_list)
 		return y_preds
 
-	def simple_transform(self, model, series):
+	def simple_transform(self, series):
 		inputs = self.prepare_input(series).to(self.config.inference_device)
-		y_preds = self.feature(model, self.config, inputs).to(self.config.output_device)
+		y_preds = self.feature(inputs).to(self.config.output_device)
 		return y_preds
 
-	def transform(self, model, series):
+	def transform(self, series):
 		# check_is_fitted(self, ['model', 'tokenizer'])
 		if self._batch_inference:
-			return self.batch_transform(model, series)
+			return self.batch_transform(series)
 		else:
-			return self.simple_transform(model, series)
+			return self.simple_transform(series)
 
 
 n_samples = 16
@@ -252,9 +248,6 @@ if __name__ == "__main__":
 		inference_device="mps",
 		output_device="cpu",
 		inference_batch_size=batch_size
-	)
-	model = AutoModel.from_pretrained(deberta_config.model).to(
-		deberta_config.inference_device
 	)
 
 	pooled_deberta_transformer = PooledDeBertaTransformer(
@@ -269,8 +262,7 @@ if __name__ == "__main__":
 		] * (n_samples // 2)
 	)
 	print(series.shape)
-	y_preds = pooled_deberta_transformer.transform(
-		model,
+	y_preds = pooled_deberta_transformer.fit_transform(
 		series
 	)
 	print(y_preds.shape)
