@@ -18,8 +18,7 @@ import torch.nn as nn
 # project specific imports
 from config import MSFTDeBertaV3Config
 from torch_utils import Data
-from pipelines import main_pipeline
-
+from pipelines import full_pipe
 
 
 SCORE_COLUMNS = ("cohesion", "syntax", "vocabulary", "phraseology", "grammar", "conventions")
@@ -32,21 +31,19 @@ class ModelTrainer(ABC):
 			train_filename,
 			test_filename,
 			submission_filename,
-			fastext_model_path,
 			batch_inference=True,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS
 	):
 		self._deberta_config = deberta_config
 		self._batch_inference = batch_inference
-		self._fastext_model_path = fastext_model_path
 		self._train_filename = train_filename
 		self._test_filename = test_filename
 		self._submission_filename = submission_filename
 		self._target_columns = target_columns
 		self._feature_columns = feature_columns
 		self._model = None
-		self._pipeline = None
+		self._pipeline = full_pipe
 
 	def __repr__(self):
 		repr_str = "'ModelTrainer' object"
@@ -57,21 +54,6 @@ class ModelTrainer(ABC):
 			return cls(train_filename=train_filename)
 		else:
 			raise ValueError(f"file '{train_filename}' does not exist.")
-
-	def make_pipeline(self):
-		self._pipeline = main_pipeline
-
-	# def fit(self, df):
-	# 	self._main_pipeline.fit(df)
-	# 	# self._deberta_pipe.fit(df)
-	#
-	# def transform(self, df):
-	# 	X_main = self._main_pipeline.transform(df)
-	# 	X_deberta = self._deberta_pipe.transform(df)
-	# 	return X_main, X_deberta
-	#
-	# def fit_transform(self, df):
-	# 	pass
 
 	def load_data(self):
 		df = pd.read_csv(self._train_filename)
@@ -166,7 +148,6 @@ class SklearnRegressorTrainer(ModelTrainer):
 		assert model_type in ("dummy", "linear", "xgb"), "'model_type' must be either 'xgb', 'linear' or 'dummy'"
 		self._deberta_config = deberta_config
 		self._batch_inference = batch_inference
-		self._fastext_model_path = fastext_model_path
 		self._model_type = model_type
 		self._train_filename = train_filename
 		self._test_filename = test_filename
@@ -226,7 +207,6 @@ class NNTrainer(ModelTrainer):
 	):
 		self._deberta_config = deberta_config
 		self._batch_inference = batch_inference
-		self._fastext_model_path = fastext_model_path
 		self._device = device
 		self._train_filename = train_filename
 		self._test_filename = test_filename
@@ -348,6 +328,13 @@ if __name__ == "__main__":
 		inference_batch_size=10
 	)
 	print(deberta_config)
-	# model_trainer = ModelTrainer(
-	#
-	# )
+	model_trainer = ModelTrainer(
+		deberta_config,
+		train_filename,
+		test_filename,
+		submission_filename,
+		fastext_model_path,
+		batch_inference=True,
+		target_columns=SCORE_COLUMNS,
+		feature_columns=FEATURE_COLUMNS
+	)

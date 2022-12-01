@@ -96,7 +96,7 @@ tf_idf_pipe = Pipeline(
 	]
 )
 
-main_pipeline = FeatureUnion(
+main_pipe = FeatureUnion(
 	[
 		("unigrams_count", number_of_unigrams_pipe),
 		("line_breaks_count", number_of_line_breaks_pipe),
@@ -122,8 +122,14 @@ pooled_deberta_pipe = Pipeline(steps=[
 	]
 )
 
-if __name__ == "__main__":
+full_pipe = FeatureUnion(
+	[
+		("main_pipe", main_pipe),
+		("pooled_deberta_pipe", pooled_deberta_pipe)
+	]
+)
 
+if __name__ == "__main__":
 	df = pd.DataFrame.from_dict({"full_text": [
 				"Some text definitely in English.",
 				"Another type of text, in English too."
@@ -131,6 +137,8 @@ if __name__ == "__main__":
 		}
 	)
 	print(df.shape)
-	y_preds = pooled_deberta_pipe.fit_transform(df)
+	# y_preds = main_pipe.fit_transform(df) #14
+	# y_preds = pooled_deberta_pipe.fit_transform(df)  # 768
+	y_preds = full_pipe.fit_transform(df)  # 782
 	print(y_preds.shape)
 	print("All Good!")
