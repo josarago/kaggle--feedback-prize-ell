@@ -1,7 +1,6 @@
-import os.path
-
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
@@ -36,7 +35,7 @@ def ftlangdetect_english_score(series: pd.Series, fasttext_model) -> np.array:
 	return res.apply(lambda x: x['score'] if x["lang"] == 'en' else 1 - x['score']).values.reshape(-1, 1)
 
 
-class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
+class FTLangdetectTransformer(TransformerMixin):
 	def __init__(
 			self,
 			model_path=FASTTEXT_MODEL_PATH
@@ -69,29 +68,14 @@ class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
 		return res.apply(lambda x: x['score'] if x["lang"] == 'en' else 1 - x['score']).values.reshape(-1, 1)
 
 
-class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
-	def __init__(
-			self,
-			config: MSFTDeBertaV3Config,
-			batch_inference=True,
-
-	):
-		"""
-			This transformer outputs the last hidden layer
-			after pooling, from a microsoft-deberta-v3-<size> model
-		"""
+class PooledDeBertaTransformer(TransformerMixin):
+	def __init__(self, config, batch_inference=True):
 		self.config = config
 		self._batch_inference = batch_inference
-		self.model = AutoModel.from_pretrained(
-			self.config.model, config=self.config.config
-		).to(
+		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
+		self.model = AutoModel.from_pretrained(self.config.model).to(
 			self.config.inference_device
 		)
-		if self.config.gradient_checkpointing:
-			self.model.gradient_checkpointing_enable()
-		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
-		if config.pooling == 'mean':
-			self.pool = MeanPooling()
 
 	def fit(self, X, y=None):
 		return self
@@ -124,30 +108,29 @@ class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 		last_hidden_states = self.model(
 			**{k: v.to(self.config.inference_device) for k, v, in inputs.items()}
 		).last_hidden_state
-		feature = self.pool(
+		feature = MeanPooling()(
 			last_hidden_states,
 			inputs['attention_mask'].to(self.config.inference_device)
 		)
 		return feature
 
 	def batch_transform(self, series):
-		preds = []
+		y_preds_list = []
 		data_loader = DataLoader(
 			dataset=series,
 			batch_size=self.config._inference_batch_size,
-			shuffle=False,
-			collate_fn=lambda x: self.prepare_input(x).to(self.config.inference_device),
-			num_workers=1
+			shuffle=False
 		)
-		#         bar = tqdm(enumerate(data_loader), total=len(data_loader))
-		#         for step, inputs in bar:
-		for inputs in data_loader:
-			with torch.no_grad():
-				y_preds = self.feature(inputs)
 
-			preds.append(y_preds.to(self.config.output_device))
-		predictions = np.concatenate(preds)
-		return predictions
+		for _series in tqdm(data_loader):
+			_inputs = self.prepare_input(
+				_series
+			).to(self.config.inference_device)
+			with torch.no_grad():
+				__y_preds = self.feature(_inputs)
+			y_preds_list.append(__y_preds.to(self.config.output_device))
+		y_preds = np.concatenate(y_preds_list)
+		return y_preds
 
 	def simple_transform(self, series):
 		inputs = self.prepare_input(series).to(self.config.inference_device)
@@ -155,7 +138,7 @@ class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 		return y_preds
 
 	def transform(self, series):
-		check_is_fitted(self, ['model', 'tokenizer'])
+		# check_is_fitted(self, ['model', 'tokenizer'])
 		if self._batch_inference:
 			return self.batch_transform(series)
 		else:
@@ -163,22 +146,25 @@ class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 
 
 if __name__ == "__main__":
-	ftl_transformer = FTLangdetectTransformer(model_path=FASTTEXT_MODEL_PATH)
-	print(ftl_transformer.__class__)
+	n_samples = 16
+	batch_size = 8
+	series = pd.Series(
+		[
+			"Some text definitely in English.",
+			"Another type of text, in English too."
+		] * (n_samples // 2)
+	)
 
-	print(ftl_transformer.fit_transform(
-		pd.Series([
-			"Some text definitely in English",
-			"Un texte absolument pas en Anglais"
-		])
-	))
+	ftl_transformer = FTLangdetectTransformer()
+	y_preds = ftl_transformer.fit_transform(series)
+	print(y_preds.shape)
 
 	deberta_config = MSFTDeBertaV3Config(
 		model_size="base",
 		pooling="mean",
 		inference_device="mps",
-		output_device="mps",
-		inference_batch_size=10
+		output_device="cpu",
+		inference_batch_size=batch_size
 	)
 
 	pooled_deberta_transformer = PooledDeBertaTransformer(
@@ -186,19 +172,13 @@ if __name__ == "__main__":
 		batch_inference=True
 	)
 
-	print(pooled_deberta_transformer.simple_transform(
-		pd.Series([
-			"Some text definitely in English",
-			"Another type of text, in English too"
-		])
-	).shape)
 
-	print(pooled_deberta_transformer.batch_transform(
-		pd.Series([
-			"Some text definitely in English",
-			"Another type of text, in English too"
-		])
-	).shape)
+	print(series.shape)
+	y_preds = pooled_deberta_transformer.fit_transform(
+		series
+	)
+	print(y_preds.shape)
+
 
 
 

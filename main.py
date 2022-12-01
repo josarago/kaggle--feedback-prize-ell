@@ -94,7 +94,7 @@ def get_file_names():
 
 
 TRAIN_FILENAME, TEST_FILENAME, SUBMISSION_FILENAME = get_file_names()
-
+print(TRAIN_FILENAME)
 
 
 
@@ -105,7 +105,6 @@ deberta_config = MSFTDeBertaV3Config(
 	output_device="cuda:0",
 	inference_batch_size=100
 )
-
 
 
 
