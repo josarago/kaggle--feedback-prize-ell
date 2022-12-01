@@ -161,9 +161,9 @@ class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
 # 			return self.simple_transform(series)
 
 def prepare_input(
-		input_texts,
+		config,
 		tokenizer,
-		config
+		input_texts
 	):
 	"""
 		this will truncate the longest essays.
@@ -199,6 +199,10 @@ def feature(model, config, inputs):
 	)
 	return feature
 
+# class PooledDeBertaTransformer:
+
+n_samples = 800
+batch_size = 8
 
 if __name__ == "__main__":
 	ftl_transformer = FTLangdetectTransformer(model_path=FASTTEXT_MODEL_PATH)
@@ -210,13 +214,13 @@ if __name__ == "__main__":
 			"Un texte absolument pas en Anglais"
 		])
 	))
-	DEVICE = "mps:0"
+	DEVICE = "cpu"
 	deberta_config = MSFTDeBertaV3Config(
 		model_size="base",
 		pooling="mean",
 		inference_device=DEVICE,
 		output_device="cpu",
-		inference_batch_size=20
+		inference_batch_size=batch_size
 	)
 
 	# pooled_deberta_transformer = PooledDeBertaTransformer(
@@ -245,25 +249,25 @@ if __name__ == "__main__":
 		)
 	series = pd.Series(
 		[
-			"Some text definitely in English",
-			"Another type of text, in English too"
-		] * 20
+			"Some text definitely in English.",
+			"Another type of text, in English too."
+		] * (n_samples // 2)
 	)
-
+	print(series.shape)
 	preds = []
 	data_loader = DataLoader(
 		dataset=series,
 		batch_size=deberta_config._inference_batch_size,
 		shuffle=False,
-		num_workers=4
+		# num_workers=4
 	)
 	#         bar = tqdm(enumerate(data_loader), total=len(data_loader))
 	#         for step, inputs in bar:
 	for _series in tqdm(data_loader):
 		_inputs = prepare_input(
-			series,
+			deberta_config,
 			tokenizer,
-			deberta_config
+			_series
 		).to(deberta_config.inference_device)
 		with torch.no_grad():
 			y_preds = feature(model, deberta_config, _inputs)
