@@ -165,13 +165,13 @@ class PooledDeBertaTransformer(TransformerMixin):
 	def __init__(self, config, batch_inference=True):
 		self.config = config
 		self._batch_inference = batch_inference
+		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
 
 	def fit(self, X, y=None):
 		return self
 
 	def prepare_input(
 		self,
-		tokenizer,
 		input_texts
 	):
 		"""
@@ -182,7 +182,7 @@ class PooledDeBertaTransformer(TransformerMixin):
 			texts_list = input_texts.values.tolist()
 		else:
 			texts_list = input_texts
-		inputs = tokenizer.batch_encode_plus(
+		inputs = self.tokenizer.batch_encode_plus(
 			texts_list,
 			return_tensors=None,
 			add_special_tokens=True,
@@ -209,7 +209,6 @@ class PooledDeBertaTransformer(TransformerMixin):
 
 	def batch_transform(
 			self,
-			tokenizer,
 			model,
 			series
 	):
@@ -222,7 +221,6 @@ class PooledDeBertaTransformer(TransformerMixin):
 
 		for _series in tqdm(data_loader):
 			_inputs = self.prepare_input(
-				tokenizer,
 				_series
 			).to(self.config.inference_device)
 			with torch.no_grad():
@@ -231,17 +229,17 @@ class PooledDeBertaTransformer(TransformerMixin):
 		y_preds = np.concatenate(y_preds_list)
 		return y_preds
 
-	def simple_transform(self, tokenizer, model, series):
-		inputs = self.prepare_input(tokenizer, series).to(self.config.inference_device)
+	def simple_transform(self, model, series):
+		inputs = self.prepare_input(series).to(self.config.inference_device)
 		y_preds = self.feature(model, self.config, inputs).to(self.config.output_device)
 		return y_preds
 
-	def transform(self, tokenizer, model, series):
+	def transform(self, model, series):
 		# check_is_fitted(self, ['model', 'tokenizer'])
 		if self._batch_inference:
-			return self.batch_transform(tokenizer, model, series)
+			return self.batch_transform(model, series)
 		else:
-			return self.simple_transform(tokenizer, model, series)
+			return self.simple_transform(model, series)
 
 
 n_samples = 16
@@ -255,8 +253,6 @@ if __name__ == "__main__":
 		output_device="cpu",
 		inference_batch_size=batch_size
 	)
-
-	tokenizer = AutoTokenizer.from_pretrained(deberta_config.tokenizer)
 	model = AutoModel.from_pretrained(deberta_config.model).to(
 		deberta_config.inference_device
 	)
@@ -273,11 +269,11 @@ if __name__ == "__main__":
 		] * (n_samples // 2)
 	)
 	print(series.shape)
-	pooled_deberta_transformer.transform(
-		tokenizer,
+	y_preds = pooled_deberta_transformer.transform(
 		model,
 		series
 	)
+	print(y_preds.shape)
 
 
 
