@@ -13,6 +13,7 @@ from sklearn_transformers import (
 
 )
 
+from config import MSFTDeBertaV3Config
 from english_utils import (
 	number_of_unigrams,
 	number_of_line_breaks,
@@ -103,6 +104,33 @@ main_pipeline = FeatureUnion(
 		("i_vs_I", i_pipe),
 		("bad_punctuation", bad_punctuation_pipe),
 		("tf-idf", tf_idf_pipe),
-		()
 	]
 )
+
+deberta_config = MSFTDeBertaV3Config(
+		model_size="base",
+		pooling="mean",
+		inference_device="mps",
+		output_device="cpu",
+		inference_batch_size=4
+	)
+
+
+pooled_deberta_pipe = Pipeline(steps=[
+		("feature_column_picker", feature_column_picker_pipe),
+		("deberta_embedding", PooledDeBertaTransformer(deberta_config, batch_inference=True)),
+	]
+)
+
+if __name__ == "__main__":
+
+	df = pd.DataFrame.from_dict({"full_text": [
+				"Some text definitely in English.",
+				"Another type of text, in English too."
+			] * 4
+		}
+	)
+	print(df.shape)
+	y_preds = pooled_deberta_pipe.fit_transform(df)
+	print(y_preds.shape)
+	print("All Good!")
