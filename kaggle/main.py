@@ -4,8 +4,17 @@ import pandas as pd
 
 from sklearn.metrics import mean_squared_error
 
-from config import MSFTDeBertaV3Config
-
+from config import (
+    MSFTDeBertaV3Config,
+    FASTTEXT_MODEL_PATH,
+    DEFAULT_DEBERTA_CONFIG
+)
+from trainers.sklearn_regressor import SklearnRegressorTrainer
+from trainers.pytorch_regressor import NNTrainer
+from trainers.base_trainer import (
+    SCORE_COLUMNS,
+    FEATURE_COLUMNS
+)
 
 KAGGLE_ROOT_DIR = "/kaggle"
 INPUT_DIR = "input"
@@ -70,11 +79,11 @@ BATCH_SIZE = 512
 
 PARAMS["nn"] = dict(
     hidden_dims=[6],
-    n_hidden = None,
+    n_hidden=None,
     batch_size=BATCH_SIZE,
     force_half_points=False,
-    num_epochs = 500,
-    learning_rate = 0.0001,
+    num_epochs=10,
+    learning_rate=0.0001,
     shuffle=True,
     val_size=0.25,
     with_validation=True,
@@ -82,29 +91,39 @@ PARAMS["nn"] = dict(
 )
 
 
-def get_file_names():
-	""""
-		generates filenames used to train, test and submit.
-		Works locally (assuming the correct directory structure) and on kaggle
-	"""
-	train_file_name = os.path.join(KAGGLE_ROOT_DIR, INPUT_DIR, CHALLENGE_NAME, "train.csv")
-	test_file_name = os.path.join(KAGGLE_ROOT_DIR, INPUT_DIR, CHALLENGE_NAME, "test.csv")
-	submission_filename = os.path.join(KAGGLE_ROOT_DIR, SUBMISSION_DIR, "submission.csv")
-	return train_file_name, test_file_name, submission_filename
+if __name__ == "__main__":
+    deberta_config = MSFTDeBertaV3Config(
+		model_size="base",
+		pooling="mean",
+		inference_device="mps",
+		batch_inference=True,
+		output_device="cpu",
+		inference_batch_size=10
+	)
+    # model_trainer = SklearnRegressorTrainer(
+	# 	model_type="xgb",
+	# 	deberta_config=deberta_config,
+	# 	target_columns=SCORE_COLUMNS,
+	# 	feature_columns=FEATURE_COLUMNS
+	# )
 
+    model_trainer = NNTrainer(
+        fastext_model_path=FASTTEXT_MODEL_PATH,
+        deberta_config=DEFAULT_DEBERTA_CONFIG,
+        batch_inference=True
+    )
 
-TRAIN_FILENAME, TEST_FILENAME, SUBMISSION_FILENAME = get_file_names()
-print(TRAIN_FILENAME)
+    df = model_trainer.load_data()
+    df_features, y = model_trainer.get_training_set(df.iloc[:40])
+    df_features_train, df_features_test, y_train, y_test = model_trainer.split_data(df_features, y, test_size=TEST_SIZE)
+    X_train = model_trainer._pipeline.fit_transform(df_features_train)
+    model_trainer.train(X_train , y_train, PARAMS["nn"])
 
+    X_test = model_trainer._pipeline.transform(df_features_test)
+    y_pred = model_trainer.predict(X_test)
+    print(model_trainer.evaluate(y_test, y_pred))
+    print("Excuse you.")
 
-
-deberta_config = MSFTDeBertaV3Config(
-	model_size="base",
-	pooling="mean",
-	inference_device="cuda:0",
-	output_device="cuda:0",
-	inference_batch_size=100
-)
 
 
 
