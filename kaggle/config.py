@@ -68,8 +68,8 @@ DEFAULT_DEBERTA_CONFIG = MSFTDeBertaV3Config(
 	"base",
 	"mean",
 	inference_device=None,
-	batch_inference=False,
+	batch_inference=True,
 	output_device="cpu",
-	inference_batch_size=100,
+	inference_batch_size=8,
 )
 

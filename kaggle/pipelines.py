@@ -11,7 +11,7 @@ from sklearn_transformers import (
 	PooledDeBertaTransformer
 )
 
-from config import MSFTDeBertaV3Config, FASTTEXT_MODEL_PATH
+from config import DEFAULT_DEBERTA_CONFIG, FASTTEXT_MODEL_PATH
 from english_utils import (
 	number_of_unigrams,
 	number_of_line_breaks,
@@ -93,35 +93,36 @@ tf_idf_pipe = Pipeline(
 	]
 )
 
-main_pipe = FeatureUnion(
+pooled_deberta_pipe = Pipeline(steps=[
+		# this is upsetting as hell but somehow the only way I can make this pipeline to work
+		("index_resetter", FunctionTransformer(lambda _df: _df.reset_index())),
+		("feature_column_picker", feature_column_picker_pipe),
+		("deberta_embedding", PooledDeBertaTransformer(DEFAULT_DEBERTA_CONFIG)),
+	]
+)
+
+
+full_pipe = FeatureUnion(
 	[
 		("unigrams_count", number_of_unigrams_pipe),
 		("line_breaks_count", number_of_line_breaks_pipe),
 		("english_score", english_score_pipe),
 		("i_vs_I", i_pipe),
 		("bad_punctuation", bad_punctuation_pipe),
-		("tf-idf", tf_idf_pipe)
+		("tf-idf", tf_idf_pipe),
+		("deberta_pipe", pooled_deberta_pipe)
+
 	]
 )
 
-deberta_config = MSFTDeBertaV3Config(
-		model_size="base",
-		pooling="mean",
-		inference_device="mps",
-		batch_inference=False,
-		output_device="cpu",
-		inference_batch_size=4
-	)
 
-
-def make_deberta_pipeline(deberta_config):
-	pooled_deberta_pipe = Pipeline(steps=[
-			("feature_column_picker", feature_column_picker_pipe),
-			("deberta_embedding", PooledDeBertaTransformer(deberta_config)),
-		]
-	)
-	return pooled_deberta_pipe
-
+# def make_deberta_pipeline(deberta_config):
+# 	pooled_deberta_pipe = Pipeline(steps=[
+# 			("feature_column_picker", feature_column_picker_pipe),
+# 			("deberta_embedding", PooledDeBertaTransformer(deberta_config)),
+# 		]
+# 	)
+# 	return pooled_deberta_pipe
 
 if __name__ == "__main__":
 	df = pd.DataFrame.from_dict({"full_text": [
