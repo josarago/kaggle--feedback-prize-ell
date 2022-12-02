@@ -1,37 +1,104 @@
-from .trainers import ModelTrainer
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
+from torch.utils.data.dataloader import default_collate
+
+from trainers.base_trainer import (
+	SCORE_COLUMNS,
+	FEATURE_COLUMNS,
+	ModelTrainer
+)
+from config import (
+	FASTTEXT_MODEL_PATH,
+	MSFTDeBertaV3Config,
+	DEFAULT_DEBERTA_CONFIG
+)
+from torch_utils import Data
+from torch.utils.data import DataLoader
+from sklearn.model_selection import train_test_split # replace
+
+
+class EllActivation(nn.Module):
+	def __init__(self, force_half_points=False):
+		super().__init__()
+		self._force_half_points = force_half_points
+
+	def forward(self, x):
+		y = torch.sigmoid(x) * 4. + 1.
+		if self._force_half_points:
+			y = torch.round(y * 2) / 2
+		return y
+
+
+class SequentialNeuralNetwork(nn.Module):
+	def __init__(self, X, y, hidden_dims=None, n_hidden=3, force_half_points=False):
+		super(SequentialNeuralNetwork, self).__init__()
+		# parameters
+		self._input_dim = X.shape[1]
+		self._output_dim = y.shape[1]
+		assert hidden_dims is not None or n_hidden is not None, "either n_hidden or hidden_dims should be non null"
+		if hidden_dims:
+			print("hidden_dims:", hidden_dims)
+			self._hidden_dims = hidden_dims
+			self._n_hidden = len(self._hidden_dims)
+
+		if n_hidden is not None:
+			print("n_hidden:", n_hidden)
+			self._n_hidden = n_hidden
+			self._alpha = (np.log(self._output_dim) / np.log(self._input_dim)) ** (1 / (self._n_hidden + 1))
+			self._hidden_dims = [
+				int(np.round(self._input_dim ** (self._alpha ** i))) for i in np.arange(1, self._n_hidden + 1)]
+
+		self._force_half_points = force_half_points
+		self._model = nn.Sequential()
+		if self._n_hidden > 0:
+			for dim_in, dim_out in zip([self._input_dim] + self._hidden_dims, self._hidden_dims):
+				linear_layer = nn.Linear(dim_in, dim_out, bias=True)
+				#                 nn.init.xavier_uniform(linear_layer.weight)
+				self._model.append(linear_layer)
+
+				self._model.append(nn.ReLU())
+			self._model.append(nn.Linear(self._hidden_dims[-1], self._output_dim, bias=True))
+			self._model.append(EllActivation(force_half_points=self._force_half_points))
+		else:
+			self._model.append(nn.Linear(self._input_dim, self._output_dim, bias=True))
+			self._model.append(EllActivation(force_half_points=self._force_half_points))
+		print(self._model)
+
+	def forward(self, x):
+		return self._model(x)
 
 
 class NNTrainer(ModelTrainer):
 	def __init__(
 			self,
-			deberta_config,
-			device,
 			fastext_model_path,
+			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
 			batch_inference=True,
-			train_filename=TRAIN_FILENAME,
-			test_filename=TEST_FILENAME,
-			submission_filename=SUBMISSION_FILENAME,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
+			train_file_name=None,
+			test_file_name=None,
+			submission_filename=None,
 	):
+		super().__init__(
+			deberta_config,
+			batch_inference=batch_inference,
+			target_columns=target_columns,
+			feature_columns=feature_columns,
+			train_file_name=train_file_name,
+			test_file_name=test_file_name,
+			submission_filename=submission_filename,
+		)
+		self._fastext_model_path = fastext_model_path
 		self._deberta_config = deberta_config
-		self._batch_inference = batch_inference
-		self._device = device
-		self._train_filename = train_filename
-		self._test_filename = test_filename
-		self._submission_filename = submission_filename
-		self._target_columns = target_columns
-		self._feature_columns = feature_columns
+		# pytorch specific
 		self._model = None
 		self._optimizer = None
 		self._loss_fn = nn.MSELoss()
-
-	@classmethod
-	def from_file(cls, deberta_config, device, batch_inference, train_filename, target_columns=SCORE_COLUMNS):
-		if os.path.exists(train_filename):
-			return cls(deberta_config, device, batch_inference=batch_inference, train_filename=train_filename)
-		else:
-			raise ValueError(f"file '{train_filename}' does not exist.")
+		self._loss_values = dict()
+		self._traning_device = self._deberta_config.inference_device
 
 	def get_data_loader(self, X, y, bactch_size, shuffle=True):
 		data = Data(X, y)
@@ -39,7 +106,7 @@ class NNTrainer(ModelTrainer):
 			dataset=data,
 			batch_size=bactch_size,
 			shuffle=shuffle,
-			collate_fn=lambda x: tuple(x_.to(self._device) for x_ in default_collate(x))
+			collate_fn=lambda x: tuple(x_.to(self._traning_device) for x_ in default_collate(x))
 		)
 		return data_loader
 
@@ -51,7 +118,7 @@ class NNTrainer(ModelTrainer):
 			n_hidden=params["n_hidden"],
 			force_half_points=params["force_half_points"]
 		)
-		self._model.to(self._device)
+		self._model.to(self._traning_device)
 		self._optimizer = torch.optim.Adam(self._model.parameters(), lr=params["learning_rate"])
 		self._loss_values = dict()
 		self._loss_values["train"] = []
@@ -64,15 +131,13 @@ class NNTrainer(ModelTrainer):
 		else:
 			train_data_loader = self.get_data_loader(X, y, params["batch_size"], params["shuffle"])
 
-		min_val_loss = np.inf
-
 		for epoch in range(params["num_epochs"]):
 			_loss_values = dict(train=[])
 
 			for X_train, y_train in train_data_loader:
 				# Compute prediction error
-				y_pred_train = self._model(X_train)
-				train_loss = self._loss_fn(y_pred_train, y_train)
+				y_pred_train = self._model(X_train.to(self._traning_device))
+				train_loss = self._loss_fn(y_pred_train, y_train.to(self._traning_device))
 				_loss_values["train"].append(train_loss.item())
 
 				# Backpropagation
@@ -106,23 +171,7 @@ class NNTrainer(ModelTrainer):
 		plt.show()
 
 	def predict(self, X, recast_scores=True):
-		y_pred = self._model(Data.csr_to_torch(X).to(device)).cpu().detach().numpy()
+		y_pred = self._model(Data.csr_to_torch(X).to(self._traning_device)).cpu().detach().numpy()
 		if recast_scores:
 			y_pred = self.recast_scores(y_pred)
 		return y_pred
-
-	def make_submission_df(self, recast_scores=True, write_file=True):
-		"""
-			implement batch prediction to avoid OOM errors?
-		"""
-		print(f"loading test file from : '{self._test_filename}'")
-		submission_df = pd.read_csv(self._test_filename)
-		X_submission = self._pipeline.transform(submission_df)
-		y_pred_submission = self.predict(X_submission, recast_scores=recast_scores)
-
-		submission_df[self._target_columns] = y_pred_submission
-		submission_df = submission_df[["text_id"] + self._target_columns]
-		if write_file:
-			print(f"Writing submission to: '{self._submission_filename}'")
-			submission_df.to_csv(self._submission_filename, index=False)
-		return submission_df

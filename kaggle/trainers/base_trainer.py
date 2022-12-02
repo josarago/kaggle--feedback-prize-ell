@@ -1,20 +1,13 @@
 import os
+
 from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-from sklearn.multioutput import MultiOutputRegressor
-from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import FeatureUnion
-
-# import lightgbm as lgb
-import xgboost as xgb
 
 from torch.utils.data import DataLoader
-import torch.nn as nn
 
 # project specific imports
 from config import (
@@ -26,7 +19,6 @@ from config import (
 	SUBMISSION_DIR
 )
 from torch_utils import Data
-from sklearn_transformers import PooledDeBertaTransformer
 from pipelines import full_pipe
 
 
@@ -58,10 +50,6 @@ class ModelTrainer(ABC):
 
 	def __repr__(self):
 		return "'ModelTrainer' object"
-
-	# @classmethod unused
-	# def from_file(cls, train_filename=None):
-	# 	return cls(DEFAULT_DEBERTA_CONFIG, train_filename=train_filename)
 
 	def load_data(self):
 		df = pd.read_csv(self._train_filename)
@@ -138,26 +126,3 @@ class ModelTrainer(ABC):
 			submission_df.to_csv(self._submission_filename, index=False)
 		return submission_df
 
-
-if __name__ == "__main__":
-	print(os.getcwd())
-	deberta_config = MSFTDeBertaV3Config(
-		model_size="base",
-		pooling="mean",
-		inference_device="mps",
-		batch_inference=True,
-		output_device="cpu",
-		inference_batch_size=10
-	)
-	print(deberta_config)
-	model_trainer = ModelTrainer(
-		deberta_config,
-		target_columns=SCORE_COLUMNS,
-		feature_columns=FEATURE_COLUMNS
-	)
-	df = model_trainer.load_data()
-	df_features, y = model_trainer.get_training_set(df.iloc[:20])
-	df_features_train, df_features_test, y_train, y_test = model_trainer.split_data(df_features, y, test_size=0.33)
-	X_train = model_trainer._pipeline.fit_transform(df_features_train)
-	print(X_train.shape)
-	print("Excuse you.")

@@ -1,46 +1,42 @@
+import sys
+import os
+import xgboost as xgb
 
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.dummy import DummyRegressor
+from sklearn.linear_model import LinearRegression
+from trainers.base_trainer import (
+	SCORE_COLUMNS,
+	FEATURE_COLUMNS,
+	ModelTrainer
+)
 
-from .base_trainer import ModelTrainer
+from config import MSFTDeBertaV3Config, DEFAULT_DEBERTA_CONFIG
 
 
 class SklearnRegressorTrainer(ModelTrainer):
+
 	def __init__(
 			self,
-			deberta_config: MSFTDeBertaV3Config,
 			model_type,
-			fastext_model_path,
+			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
 			batch_inference=True,
-			train_filename=TRAIN_FILENAME,
-			test_filename=TEST_FILENAME,
-			submission_filename=SUBMISSION_FILENAME,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
+			train_file_name=None,
+			test_file_name=None,
+			submission_filename=None,
 	):
-
-		assert model_type in ("dummy", "linear", "xgb"), "'model_type' must be either 'xgb', 'linear' or 'dummy'"
-		self._deberta_config = deberta_config
-		self._batch_inference = batch_inference
-		self._model_type = model_type
-		self._train_filename = train_filename
-		self._test_filename = test_filename
-		self._submission_filename = submission_filename
-		self._target_columns = target_columns
-		self._feature_columns = feature_columns
-		self._model = None
-
-	@classmethod
-	def from_file(
-			cls,
+		super().__init__(
 			deberta_config,
-			train_filename,
-			model_type,
-			batch_inference,
-			target_columns=SCORE_COLUMNS
-	):
-		if os.path.exists(train_filename):
-			return cls(deberta_config, model_type, batch_inference=batch_inference, train_filename=train_filename)
-		else:
-			raise ValueError(f"file '{train_filename}' does not exist.")
+			batch_inference=batch_inference,
+			target_columns=target_columns,
+			feature_columns=feature_columns,
+			train_file_name=train_file_name,
+			test_file_name=test_file_name,
+			submission_filename=submission_filename,
+		)
+		self._model_type = model_type
 
 	def train(self, X, y, params=None):
 		# if self._model_type == "lgbm":
@@ -62,3 +58,4 @@ class SklearnRegressorTrainer(ModelTrainer):
 		if recast_scores:
 			y_pred = self.recast_scores(y_pred)
 		return y_pred
+
