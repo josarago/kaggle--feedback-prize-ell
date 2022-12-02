@@ -69,7 +69,6 @@ class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
 class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 	def __init__(self, config, batch_inference=True):
 		self.config = config
-		self._batch_inference = batch_inference
 		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
 		self.model = AutoModel.from_pretrained(self.config.model).to(
 			self.config.inference_device
@@ -137,9 +136,11 @@ class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 
 	def transform(self, series):
 		# check_is_fitted(self, ['model', 'tokenizer'])
-		if self._batch_inference:
+		if self.config._batch_inference:
+			print("using batch_transform")
 			return self.batch_transform(series)
 		else:
+			print("using simple_transform")
 			return self.simple_transform(series)
 
 
@@ -168,7 +169,7 @@ if __name__ == "__main__":
 
 	pooled_deberta_transformer = PooledDeBertaTransformer(
 		deberta_config,
-		batch_inference=True
+		batch_inference=False
 	)
 
 

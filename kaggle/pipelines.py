@@ -108,23 +108,19 @@ deberta_config = MSFTDeBertaV3Config(
 		model_size="base",
 		pooling="mean",
 		inference_device="mps",
+		batch_inference=False,
 		output_device="cpu",
 		inference_batch_size=4
 	)
 
 
-pooled_deberta_pipe = Pipeline(steps=[
-		("feature_column_picker", feature_column_picker_pipe),
-		("deberta_embedding", PooledDeBertaTransformer(deberta_config, batch_inference=True)),
-	]
-)
-
-full_pipe = FeatureUnion(
-	[
-		("main_pipe", main_pipe),
-		("pooled_deberta_pipe", pooled_deberta_pipe)
-	]
-)
+def make_deberta_pipeline(deberta_config):
+	pooled_deberta_pipe = Pipeline(steps=[
+			("feature_column_picker", feature_column_picker_pipe),
+			("deberta_embedding", PooledDeBertaTransformer(deberta_config)),
+		]
+	)
+	return pooled_deberta_pipe
 
 
 if __name__ == "__main__":

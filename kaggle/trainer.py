@@ -8,6 +8,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import FeatureUnion
 
 # import lightgbm as lgb
 import xgboost as xgb
@@ -25,7 +26,7 @@ from config import (
 	SUBMISSION_DIR
 )
 from torch_utils import Data
-from pipelines import main_pipe, pooled_deberta_pipe, full_pipe
+from pipelines import main_pipe, make_deberta_pipeline
 
 
 SCORE_COLUMNS = ("cohesion", "syntax", "vocabulary", "phraseology", "grammar", "conventions")
@@ -52,7 +53,12 @@ class ModelTrainer(ABC):
 		self._target_columns = list(target_columns)
 		self._feature_columns = list(feature_columns)
 		self._model = None
-		self.pipeline = pooled_deberta_pipe
+		self.pipeline = FeatureUnion(
+			[
+				("main_pipe", main_pipe),
+				("pooled_deberta_pipe", make_deberta_pipeline(self._deberta_config))
+			]
+		)
 
 	def __repr__(self):
 		return "'ModelTrainer' object"
@@ -101,7 +107,8 @@ if __name__ == "__main__":
 		model_size="base",
 		pooling="mean",
 		inference_device="mps",
-		output_device="mps",
+		batch_inference=True,
+		output_device="cpu",
 		inference_batch_size=10
 	)
 	print(deberta_config)

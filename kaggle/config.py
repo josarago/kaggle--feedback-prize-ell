@@ -11,8 +11,6 @@ FASTTEXT_MODEL_PATH = os.path.join(KAGGLE_ROOT_DIR, INPUT_DIR,  "fasttextmodel/l
 MODELS_DIR_PATH = os.path.join(KAGGLE_ROOT_DIR, INPUT_DIR,  "fb3models")
 
 
-
-
 def get_default_inference_device():
 	if "arm" in platform.platform():
 		return "mps:0"
@@ -42,11 +40,11 @@ class MSFTDeBertaV3Config:
 		self.pooling = pooling
 		self.inference_device = inference_device if inference_device else get_default_inference_device()
 		self._batch_inference = batch_inference
+		self._inference_batch_size = inference_batch_size
 		self._models_dir_path = MODELS_DIR_PATH
 		self._path_prefix = "microsoft-deberta-v3-"
 		self._base_dir_path = os.path.join(self._models_dir_path, self._path_prefix + self._model_size)
 		self.gradient_checkpointing = False
-		self._inference_batch_size = inference_batch_size
 		self.output_device = output_device
 		self.tokenizer_max_length = 512
 
