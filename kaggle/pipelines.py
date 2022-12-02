@@ -116,14 +116,6 @@ full_pipe = FeatureUnion(
 )
 
 
-# def make_deberta_pipeline(deberta_config):
-# 	pooled_deberta_pipe = Pipeline(steps=[
-# 			("feature_column_picker", feature_column_picker_pipe),
-# 			("deberta_embedding", PooledDeBertaTransformer(deberta_config)),
-# 		]
-# 	)
-# 	return pooled_deberta_pipe
-
 if __name__ == "__main__":
 	df = pd.DataFrame.from_dict({"full_text": [
 				"Some text definitely in English.",
@@ -132,8 +124,6 @@ if __name__ == "__main__":
 		}
 	)
 	print(df.shape)
-	# y_preds = main_pipe.fit_transform(df) #14
-	# y_preds = pooled_deberta_pipe.fit_transform(df)  # 768
-	y_preds = full_pipe.fit_transform(df)  # 782
+	y_preds = full_pipe.fit_transform(df)
 	print(y_preds.shape)
 	print("All Good!")
