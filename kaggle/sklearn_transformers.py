@@ -66,15 +66,15 @@ class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
 		return res.apply(lambda x: x['score'] if x["lang"] == 'en' else 1 - x['score']).values.reshape(-1, 1)
 
 
-class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
-	def __init__(self, config, batch_inference=True):
+class PooledDeBertaTransformer:
+	def __init__(self, config):
 		self.config = config
 		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
 		self.model = AutoModel.from_pretrained(self.config.model).to(
 			self.config.inference_device
 		)
 
-	def fit(self, X, y=None):
+	def fit(self, series, y=None):
 		return self
 
 	def prepare_input(self, input_texts):
@@ -118,8 +118,7 @@ class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 			batch_size=self.config._inference_batch_size,
 			shuffle=False
 		)
-		# for _series in tqdm(data_loader):
-		for _series in data_loader:
+		for _series in tqdm(data_loader):
 			_inputs = self.prepare_input(
 				_series
 			).to(self.config.inference_device)
@@ -143,6 +142,11 @@ class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 			print("using simple_transform")
 			return self.simple_transform(series)
 
+	def fit_transform(self, series, y=None):
+		self.fit(series, y=None)
+		y_preds = self.transform(series)
+		return y_preds
+
 
 if __name__ == "__main__":
 	n_samples = 16
@@ -163,13 +167,12 @@ if __name__ == "__main__":
 		pooling="mean",
 		inference_device="mps",
 		output_device="cpu",
-		batch_inference=False,
+		batch_inference=True,
 		inference_batch_size=batch_size
 	)
 
 	pooled_deberta_transformer = PooledDeBertaTransformer(
-		deberta_config,
-		batch_inference=False
+		deberta_config
 	)
 
 

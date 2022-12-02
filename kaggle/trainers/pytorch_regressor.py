@@ -1,5 +1,6 @@
 from .trainers import ModelTrainer
 
+
 class NNTrainer(ModelTrainer):
 	def __init__(
 			self,
