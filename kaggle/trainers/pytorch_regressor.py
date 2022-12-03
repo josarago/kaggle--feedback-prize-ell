@@ -98,7 +98,7 @@ class NNTrainer(ModelTrainer):
 		self._optimizer = None
 		self._loss_fn = nn.MSELoss()
 		self._loss_values = dict()
-		self._traning_device = self._deberta_config.inference_device
+		self._training_device = self._deberta_config.inference_device
 
 	def get_data_loader(self, X, y, bactch_size, shuffle=True):
 		data = Data(X, y)
@@ -106,7 +106,7 @@ class NNTrainer(ModelTrainer):
 			dataset=data,
 			batch_size=bactch_size,
 			shuffle=shuffle,
-			collate_fn=lambda x: tuple(x_.to(self._traning_device) for x_ in default_collate(x))
+			collate_fn=lambda x: tuple(x_.to(self._training_device) for x_ in default_collate(x))
 		)
 		return data_loader
 
@@ -118,8 +118,11 @@ class NNTrainer(ModelTrainer):
 			n_hidden=params["n_hidden"],
 			force_half_points=params["force_half_points"]
 		)
-		self._model.to(self._traning_device)
-		self._optimizer = torch.optim.Adam(self._model.parameters(), lr=params["learning_rate"])
+		self._model.to(self._training_device)
+		self._optimizer = torch.optim.Adam(
+			self._model.parameters(),
+			lr=params["learning_rate"]
+		)
 		self._loss_values = dict()
 		self._loss_values["train"] = []
 		if params["with_validation"]:
@@ -136,8 +139,8 @@ class NNTrainer(ModelTrainer):
 
 			for X_train, y_train in train_data_loader:
 				# Compute prediction error
-				y_pred_train = self._model(X_train.to(self._traning_device))
-				train_loss = self._loss_fn(y_pred_train, y_train.to(self._traning_device))
+				y_pred_train = self._model(X_train.to(self._training_device))
+				train_loss = self._loss_fn(y_pred_train, y_train.to(self._training_device))
 				_loss_values["train"].append(train_loss.item())
 
 				# Backpropagation
@@ -171,7 +174,7 @@ class NNTrainer(ModelTrainer):
 		plt.show()
 
 	def predict(self, X, recast_scores=True):
-		y_pred = self._model(Data.csr_to_torch(X).to(self._traning_device)).cpu().detach().numpy()
+		y_pred = self._model(Data.csr_to_torch(X).to(self._training_device)).cpu().detach().numpy()
 		if recast_scores:
 			y_pred = self.recast_scores(y_pred)
 		return y_pred
