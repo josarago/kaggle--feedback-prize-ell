@@ -1,5 +1,3 @@
-import sys
-import os
 import xgboost as xgb
 
 from sklearn.multioutput import MultiOutputRegressor
