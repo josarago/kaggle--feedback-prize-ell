@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 
 # project specific imports
 from config import (
+	FASTTEXT_MODEL_PATH,
 	MSFTDeBertaV3Config,
 	DEFAULT_DEBERTA_CONFIG,
 	KAGGLE_ROOT_DIR,
@@ -19,7 +20,7 @@ from config import (
 	SUBMISSION_DIR
 )
 from torch_utils import Data
-from pipelines import features_pipeline
+from pipelines import make_features_pipeline
 
 
 SCORE_COLUMNS = ("cohesion", "syntax", "vocabulary", "phraseology", "grammar", "conventions")
@@ -29,16 +30,16 @@ FEATURE_COLUMNS = ("full_text",)
 class ModelTrainer(ABC):
 	def __init__(
 			self,
+			fastext_model_path=FASTTEXT_MODEL_PATH,
 			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
-			batch_inference=True,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
 			train_file_name=None,
 			test_file_name=None,
 			submission_filename=None,
 	):
+		self._fastext_model_path = fastext_model_path
 		self._deberta_config = deberta_config
-		self._batch_inference = batch_inference
 		self._challenge_name = CHALLENGE_NAME
 		self._train_filename = train_file_name if train_file_name else os.path.join(KAGGLE_ROOT_DIR, INPUT_DIR, CHALLENGE_NAME, "train.csv")
 		self._test_filename = test_file_name if test_file_name else os.path.join(KAGGLE_ROOT_DIR, INPUT_DIR, CHALLENGE_NAME, "test.csv")
@@ -46,7 +47,10 @@ class ModelTrainer(ABC):
 		self._target_columns = list(target_columns)
 		self._feature_columns = list(feature_columns)
 		self._model = None
-		self._pipeline = features_pipeline
+		self._pipeline = make_features_pipeline(
+			fastext_model_path=self._fastext_model_path,
+			deberta_config=self._deberta_config
+		)
 
 	def __repr__(self):
 		return "'ModelTrainer' object"

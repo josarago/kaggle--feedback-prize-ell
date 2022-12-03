@@ -6,10 +6,10 @@ from config import (
 from trainers.sklearn_regressor import SklearnRegressorTrainer
 from trainers.pytorch_regressor import NNTrainer
 
-KAGGLE_ROOT_DIR = "/kaggle"
-INPUT_DIR = "input"
-CHALLENGE_NAME = "feedback-prize-english-language-learning"
-SUBMISSION_DIR = "working"
+# KAGGLE_ROOT_DIR = ""
+# INPUT_DIR = "input"
+# CHALLENGE_NAME = "feedback-prize-english-language-learning"
+# SUBMISSION_DIR = "working"
 
 TEST_SIZE = 0.33
 
@@ -90,15 +90,11 @@ if __name__ == "__main__":
 	)
 	# model_trainer = SklearnRegressorTrainer(
 	# 	model_type="xgb",
-	# 	deberta_config=deberta_config,
-	# 	target_columns=SCORE_COLUMNS,
-	# 	feature_columns=FEATURE_COLUMNS
 	# )
 
 	model_trainer = NNTrainer(
 		fastext_model_path=FASTTEXT_MODEL_PATH,
 		deberta_config=DEFAULT_DEBERTA_CONFIG,
-		batch_inference=True
 	)
 
 	df = model_trainer.load_data()

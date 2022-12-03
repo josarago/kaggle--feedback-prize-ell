@@ -48,15 +48,6 @@ number_of_line_breaks_pipe = Pipeline(
 	]
 )
 
-english_score_pipe = Pipeline(
-	steps=[
-		("feature_column_picker", feature_column_picker_pipe),
-		#                 ("english_scorer",  FunctionTransformer(ftlangdetect_english_score)),
-		("english_scorer", FTLangdetectTransformer(model_path=FASTTEXT_MODEL_PATH)),
-		("scale", StandardScaler())
-	]
-)
-
 i_pipe = Pipeline(
 	steps=[
 		# pick the column
@@ -93,27 +84,46 @@ tf_idf_pipe = Pipeline(
 	]
 )
 
-pooled_deberta_pipe = Pipeline(steps=[
-		# this is upsetting as hell but somehow the only way I can make this pipeline to work
-		("index_resetter", FunctionTransformer(lambda _df: _df.reset_index())),
-		("feature_column_picker", feature_column_picker_pipe),
-		("deberta_embedding", PooledDeBertaTransformer(DEFAULT_DEBERTA_CONFIG)),
-	]
-)
+
+def make_english_score_pipe(model_path=FASTTEXT_MODEL_PATH):
+	english_score_pipe = Pipeline(
+		steps=[
+			("feature_column_picker", feature_column_picker_pipe),
+			("english_scorer", FTLangdetectTransformer(model_path=model_path)),
+			("scale", StandardScaler())
+		]
+	)
+	return english_score_pipe
 
 
-features_pipeline = FeatureUnion(
-	[
-		("unigrams_count", number_of_unigrams_pipe),
-		("line_breaks_count", number_of_line_breaks_pipe),
-		("english_score", english_score_pipe),
-		("i_vs_I", i_pipe),
-		("bad_punctuation", bad_punctuation_pipe),
-		("tf-idf", tf_idf_pipe),
-		("deberta_pipe", pooled_deberta_pipe)
+def make_deberta_pipe(deberta_config=DEFAULT_DEBERTA_CONFIG):
+	pooled_deberta_pipe = Pipeline(steps=[
+			# this is upsetting as hell but somehow the only way I can make this pipeline to work
+			("index_resetter", FunctionTransformer(lambda _df: _df.reset_index())),
+			("feature_column_picker", feature_column_picker_pipe),
+			("deberta_embedding", PooledDeBertaTransformer(deberta_config)),
+		]
+	)
+	return pooled_deberta_pipe
 
-	]
-)
+
+def make_features_pipeline(
+	fastext_model_path=FASTTEXT_MODEL_PATH,
+	deberta_config=DEFAULT_DEBERTA_CONFIG
+):
+	features_pipeline = FeatureUnion(
+		[
+			("unigrams_count", number_of_unigrams_pipe),
+			("line_breaks_count", number_of_line_breaks_pipe),
+			("english_score", make_english_score_pipe(fastext_model_path)),
+			("i_vs_I", i_pipe),
+			("bad_punctuation", bad_punctuation_pipe),
+			("tf-idf", tf_idf_pipe),
+			("deberta_pipe", make_deberta_pipe(deberta_config))
+
+		]
+	)
+	return features_pipeline
 
 
 if __name__ == "__main__":
@@ -124,6 +134,7 @@ if __name__ == "__main__":
 		}
 	)
 	print(df.shape)
+	features_pipeline = make_features_pipeline()
 	y_preds = features_pipeline.fit_transform(df)
 	print(y_preds.shape)
 	print("All Good!")

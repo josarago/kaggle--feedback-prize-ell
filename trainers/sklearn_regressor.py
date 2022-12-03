@@ -9,7 +9,7 @@ from trainers.base_trainer import (
 	ModelTrainer
 )
 
-from config import MSFTDeBertaV3Config, DEFAULT_DEBERTA_CONFIG
+from config import FASTTEXT_MODEL_PATH, MSFTDeBertaV3Config, DEFAULT_DEBERTA_CONFIG
 
 
 class SklearnRegressorTrainer(ModelTrainer):
@@ -17,8 +17,8 @@ class SklearnRegressorTrainer(ModelTrainer):
 	def __init__(
 			self,
 			model_type,
+			fastext_model_path=FASTTEXT_MODEL_PATH,
 			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
-			batch_inference=True,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
 			train_file_name=None,
@@ -26,8 +26,8 @@ class SklearnRegressorTrainer(ModelTrainer):
 			submission_filename=None,
 	):
 		super().__init__(
+			fastext_model_path,
 			deberta_config,
-			batch_inference=batch_inference,
 			target_columns=target_columns,
 			feature_columns=feature_columns,
 			train_file_name=train_file_name,

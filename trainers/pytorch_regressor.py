@@ -73,9 +73,8 @@ class SequentialNeuralNetwork(nn.Module):
 class NNTrainer(ModelTrainer):
 	def __init__(
 			self,
-			fastext_model_path,
+			fastext_model_path=FASTTEXT_MODEL_PATH,
 			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
-			batch_inference=True,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
 			train_file_name=None,
@@ -83,18 +82,15 @@ class NNTrainer(ModelTrainer):
 			submission_filename=None,
 	):
 		super().__init__(
+			fastext_model_path,
 			deberta_config,
-			batch_inference=batch_inference,
 			target_columns=target_columns,
 			feature_columns=feature_columns,
 			train_file_name=train_file_name,
 			test_file_name=test_file_name,
 			submission_filename=submission_filename,
 		)
-		self._fastext_model_path = fastext_model_path
-		self._deberta_config = deberta_config
 		# pytorch specific
-		self._model = None
 		self._optimizer = None
 		self._loss_fn = nn.MSELoss()
 		self._loss_values = dict()

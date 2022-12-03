@@ -2,7 +2,7 @@ import os
 import torch
 import platform
 
-KAGGLE_ROOT_DIR = "kaggle"
+KAGGLE_ROOT_DIR = "."
 INPUT_DIR = "input"
 CHALLENGE_NAME = "feedback-prize-english-language-learning"
 SUBMISSION_DIR = "working"
