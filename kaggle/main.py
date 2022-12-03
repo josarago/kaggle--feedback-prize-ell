@@ -23,10 +23,10 @@ SUBMISSION_DIR = "working"
 
 TEST_SIZE = 0.33
 
-PARAMS = dict()
-PARAMS["dummy"] = dict()
-PARAMS["linear"] = dict()
-PARAMS["xgb"] = dict(
+TRAINING_PARAMS = dict()
+TRAINING_PARAMS["dummy"] = dict()
+TRAINING_PARAMS["linear"] = dict()
+TRAINING_PARAMS["xgb"] = dict(
     booster='gbtree',
     colsample_bylevel=1.0,
     colsample_bytree=1.0,
@@ -53,7 +53,7 @@ PARAMS["xgb"] = dict(
 )
 
 
-PARAMS["lgbm"] = dict(
+TRAINING_PARAMS["lgbm"] = dict(
     boosting_type='gbdt',
     num_leaves=15, #31
     max_depth=14, #-1
@@ -77,7 +77,7 @@ PARAMS["lgbm"] = dict(
 
 BATCH_SIZE = 512
 
-PARAMS["nn"] = dict(
+TRAINING_PARAMS["nn"] = dict(
     hidden_dims=[6],
     n_hidden=None,
     batch_size=BATCH_SIZE,
@@ -87,7 +87,7 @@ PARAMS["nn"] = dict(
     shuffle=True,
     val_size=0.25,
     with_validation=True,
-    device="cpu"
+    training_device="cpu"
 )
 
 
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     df_features, y = model_trainer.get_training_set(df.iloc[:40])
     df_features_train, df_features_test, y_train, y_test = model_trainer.split_data(df_features, y, test_size=TEST_SIZE)
     X_train = model_trainer._pipeline.fit_transform(df_features_train)
-    model_trainer.train(X_train , y_train, PARAMS["nn"])
+    model_trainer.train(X_train, y_train, TRAINING_PARAMS["nn"])
 
     X_test = model_trainer._pipeline.transform(df_features_test)
     y_pred = model_trainer.predict(X_test)
