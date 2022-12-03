@@ -66,7 +66,7 @@ class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
 		return res.apply(lambda x: x['score'] if x["lang"] == 'en' else 1 - x['score']).values.reshape(-1, 1)
 
 
-class PooledDeBertaTransformer:
+class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 	def __init__(self, config):
 		self.config = config
 		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
