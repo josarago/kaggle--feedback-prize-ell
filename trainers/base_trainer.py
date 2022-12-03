@@ -19,7 +19,7 @@ from config import (
 	SUBMISSION_DIR
 )
 from torch_utils import Data
-from pipelines import full_pipe
+from pipelines import features_pipeline
 
 
 SCORE_COLUMNS = ("cohesion", "syntax", "vocabulary", "phraseology", "grammar", "conventions")
@@ -46,7 +46,7 @@ class ModelTrainer(ABC):
 		self._target_columns = list(target_columns)
 		self._feature_columns = list(feature_columns)
 		self._model = None
-		self._pipeline = full_pipe
+		self._pipeline = features_pipeline
 
 	def __repr__(self):
 		return "'ModelTrainer' object"

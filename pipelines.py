@@ -102,7 +102,7 @@ pooled_deberta_pipe = Pipeline(steps=[
 )
 
 
-full_pipe = FeatureUnion(
+features_pipeline = FeatureUnion(
 	[
 		("unigrams_count", number_of_unigrams_pipe),
 		("line_breaks_count", number_of_line_breaks_pipe),
@@ -124,6 +124,6 @@ if __name__ == "__main__":
 		}
 	)
 	print(df.shape)
-	y_preds = full_pipe.fit_transform(df)
+	y_preds = features_pipeline.fit_transform(df)
 	print(y_preds.shape)
 	print("All Good!")
