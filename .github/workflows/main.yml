@@ -28,14 +28,15 @@ jobs:
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
 
         with:
-          id:  "josarago/feedback-prize-ell"
-          title: "Testing github actions for upload datasets"
+          id:  ${{ secrets.KAGGLE_USERNAME }}/feedback-prize-ell-repo
+          title: "Code used for the Feedback Prize - English Language Learning competition"
           subtitle: "Feedback Prize - English Language Learning repository"
           description: "## Using Github actions to keep the code repo in sync "
           files: |
             *.py
             *.md
             *.yml
+            trainers
             .gitignore
             .gitattributes
-          is_public: true
+          is_public: false
