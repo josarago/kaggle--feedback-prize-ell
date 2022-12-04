@@ -28,7 +28,7 @@ jobs:
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
 
         with:
-          id:  "feedback-prize-ell"
+          id:  "josarago/feedback-prize-ell"
           title: "Testing github actions for upload datasets"
           subtitle: "Feedback Prize - English Language Learning repository"
           description: "## Using Github actions to keep the code repo in sync "
