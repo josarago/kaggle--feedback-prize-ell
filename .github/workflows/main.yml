@@ -30,8 +30,8 @@ jobs:
         with:
           id:  ${{ secrets.KAGGLE_USERNAME }}/feedback-prize-ell-repo
           title: "Code used for the Feedback Prize - English Language Learning competition"
-          subtitle: "Feedback Prize - English Language Learning repository"
-          description: "## Using Github actions to keep the code repo in sync "
+          subtitle: "Synced using Github actions"
+          description: "## We generate features with Deberta V3 models using a sklearn transformer"
           files: |
             *.py
             *.md
