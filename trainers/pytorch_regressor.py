@@ -155,7 +155,7 @@ class NNTrainer(ModelTrainer):
 					val_loss = self._loss_fn(y_pred_val, y_val)
 					# Calculate Loss
 					_loss_values["val"].append(val_loss.item())
-			self._loss_values["val"].append(np.mean(_loss_values["val"]))
+			self._loss_values["val"].append(np.sqrt(np.mean(_loss_values["val"])))
 
 		print("Training Complete")
 
