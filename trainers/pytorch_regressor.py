@@ -137,14 +137,14 @@ class NNTrainer(ModelTrainer):
 				# Compute prediction error
 				y_pred_train = self._model(X_train.to(self._training_device))
 				train_loss = self._loss_fn(y_pred_train, y_train.to(self._training_device))
-				_loss_values["train"].append(train_loss.item())
+				_loss_values["train"].append(np.sqrt(train_loss.item()))
 
 				# Backpropagation
 				self._optimizer.zero_grad()
 				train_loss.backward()
 				self._optimizer.step()
 
-			self._loss_values["train"].append(np.mean(_loss_values["train"]))
+			self._loss_values["train"].append(np.sqrt(np.mean(_loss_values["train"])))
 			if params["with_validation"]:
 				_loss_values["val"] = []
 				self._model.eval()  # Optional when not using Model Specific layer
