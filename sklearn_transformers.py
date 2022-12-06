@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader
 
 from transformers import AutoTokenizer, AutoModel
 
-from config import MSFTDeBertaV3Config, FASTTEXT_MODEL_PATH
 from english_utils import clean_special_characters
 
 
@@ -146,43 +145,3 @@ class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 		self.fit(series, y=None)
 		y_preds = self.transform(series)
 		return y_preds
-
-
-if __name__ == "__main__":
-	n_samples = 16
-	batch_size = 8
-	series = pd.Series(
-		[
-			"Some text definitely in English.",
-			"Another type of text, in English too."
-		] * (n_samples // 2)
-	)
-
-	ftl_transformer = FTLangdetectTransformer(model_path=FASTTEXT_MODEL_PATH)
-	y_preds = ftl_transformer.fit_transform(series)
-	print(y_preds.shape)
-
-	deberta_config = MSFTDeBertaV3Config(
-		model_size="base",
-		pooling="mean",
-		inference_device="mps",
-		output_device="cpu",
-		batch_inference=True,
-		inference_batch_size=batch_size
-	)
-
-	pooled_deberta_transformer = PooledDeBertaTransformer(
-		deberta_config
-	)
-
-
-	print(series.shape)
-	y_preds = pooled_deberta_transformer.fit_transform(
-		series
-	)
-	print(y_preds.shape)
-
-
-
-
-

@@ -124,17 +124,3 @@ def make_features_pipeline(
 		]
 	)
 	return features_pipeline
-
-
-if __name__ == "__main__":
-	df = pd.DataFrame.from_dict({"full_text": [
-				"Some text definitely in English.",
-				"Another type of text, in English too."
-			] * 4
-		}
-	)
-	print(df.shape)
-	features_pipeline = make_features_pipeline()
-	y_preds = features_pipeline.fit_transform(df)
-	print(y_preds.shape)
-	print("All Good!")
