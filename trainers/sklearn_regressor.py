@@ -40,7 +40,7 @@ class SklearnRegressorTrainer(ModelTrainer):
 	def train(self, X, y, params=None):
 		if self._model_type == "lgb":
 			print("creating LightGBM regressor")
-			self._model = MultiOutputRegressor(lgb.LGBMRegressor(**params))
+			self._model = MultiOutputRegressor(lgb.LGBMRegressor(**params if params else {}))
 		elif self._model_type == "xgb":
 			print("creating XGBoost regressor")
 			self._model = MultiOutputRegressor(xgb.XGBRegressor(**params if params else {}))
