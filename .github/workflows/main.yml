@@ -28,7 +28,7 @@ jobs:
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
 
         with:
-          id:  ${{ secrets.KAGGLE_USERNAME }}/feedback-prize-ell-github-repo
+          id:  ${{ secrets.KAGGLE_USERNAME }}/kaggle--feedback-prize-ell
           title: "Code used for the Feedback Prize - English Language Learning competition"
           subtitle: "Synced using Github actions"
           description: "## We generate features with Deberta V3 models using a sklearn transformer"
