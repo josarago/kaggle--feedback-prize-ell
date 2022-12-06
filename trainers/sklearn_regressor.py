@@ -1,4 +1,5 @@
 import xgboost as xgb
+import lightgbm as lgb
 
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.dummy import DummyRegressor
