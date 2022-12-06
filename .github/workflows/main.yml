@@ -39,4 +39,4 @@ jobs:
             trainers
             .gitignore
             .gitattributes
-          is_public: false
+          is_public: true
