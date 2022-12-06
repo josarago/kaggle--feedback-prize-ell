@@ -37,10 +37,10 @@ class SklearnRegressorTrainer(ModelTrainer):
 		self._model_type = model_type
 
 	def train(self, X, y, params=None):
-		# if self._model_type == "lgbm":
-		# 	print("creating LightGBM regressor")
-		# 	self._model = MultiOutputRegressor(lgb.LGBMRegressor(**params))
-		if self._model_type == "xgb":
+		if self._model_type == "lgb":
+			print("creating LightGBM regressor")
+			self._model = MultiOutputRegressor(lgb.LGBMRegressor(**params))
+		elif self._model_type == "xgb":
 			print("creating XGBoost regressor")
 			self._model = MultiOutputRegressor(xgb.XGBRegressor(**params if params else {}))
 		elif self._model_type == "linear":
@@ -49,6 +49,8 @@ class SklearnRegressorTrainer(ModelTrainer):
 		elif self._model_type == "dummy":
 			print("creating dummy model")
 			self._model = DummyRegressor(strategy="mean")
+		else:
+			raise ValueError("unknown model type")
 		self._model.fit(X, y)
 
 	def predict(self, X, recast_scores=True):
