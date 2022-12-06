@@ -9,11 +9,7 @@ from trainers.base_trainer import (
 	FEATURE_COLUMNS,
 	ModelTrainer
 )
-from config import (
-	FASTTEXT_MODEL_PATH,
-	MSFTDeBertaV3Config,
-	DEFAULT_DEBERTA_CONFIG
-)
+from config import MSFTDeBertaV3Config
 from torch_utils import Data
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split # replace
@@ -73,8 +69,8 @@ class SequentialNeuralNetwork(nn.Module):
 class NNTrainer(ModelTrainer):
 	def __init__(
 			self,
-			fastext_model_path=FASTTEXT_MODEL_PATH,
-			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
+			fastext_model_path,
+			deberta_config: MSFTDeBertaV3Config,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
 			train_file_name=None,

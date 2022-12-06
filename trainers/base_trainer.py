@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader
 from config import (
 	FASTTEXT_MODEL_PATH,
 	MSFTDeBertaV3Config,
-	DEFAULT_DEBERTA_CONFIG,
 	KAGGLE_ROOT_DIR,
 	INPUT_DIR,
 	CHALLENGE_NAME,
@@ -30,8 +29,8 @@ FEATURE_COLUMNS = ("full_text",)
 class ModelTrainer(ABC):
 	def __init__(
 			self,
-			fastext_model_path=FASTTEXT_MODEL_PATH,
-			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
+			fastext_model_path,
+			deberta_config: MSFTDeBertaV3Config,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
 			train_file_name=None,

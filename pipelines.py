@@ -11,7 +11,7 @@ from sklearn_transformers import (
 	PooledDeBertaTransformer
 )
 
-from config import DEFAULT_DEBERTA_CONFIG, FASTTEXT_MODEL_PATH
+from config import FASTTEXT_MODEL_PATH, MSFTDeBertaV3Config
 from english_utils import (
 	number_of_unigrams,
 	number_of_line_breaks,
@@ -96,7 +96,7 @@ def make_english_score_pipe(model_path=FASTTEXT_MODEL_PATH):
 	return english_score_pipe
 
 
-def make_deberta_pipe(deberta_config=DEFAULT_DEBERTA_CONFIG):
+def make_deberta_pipe(deberta_config):
 	pooled_deberta_pipe = Pipeline(steps=[
 			# this is upsetting as hell but somehow the only way I can make this pipeline to work
 			("index_resetter", FunctionTransformer(lambda _df: _df.reset_index())),
@@ -108,8 +108,8 @@ def make_deberta_pipe(deberta_config=DEFAULT_DEBERTA_CONFIG):
 
 
 def make_features_pipeline(
-	fastext_model_path=FASTTEXT_MODEL_PATH,
-	deberta_config=DEFAULT_DEBERTA_CONFIG
+	fastext_model_path,
+	deberta_config: MSFTDeBertaV3Config
 ):
 	features_pipeline = FeatureUnion(
 		[

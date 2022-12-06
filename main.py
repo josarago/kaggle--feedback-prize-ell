@@ -1,7 +1,6 @@
 from config import (
 	MSFTDeBertaV3Config,
-	FASTTEXT_MODEL_PATH,
-	DEFAULT_DEBERTA_CONFIG
+	FASTTEXT_MODEL_PATH
 )
 from trainers.sklearn_regressor import SklearnRegressorTrainer
 from trainers.pytorch_regressor import NNTrainer
@@ -81,7 +80,7 @@ TRAINING_PARAMS["nn"] = dict(
 
 if __name__ == "__main__":
 	deberta_config = MSFTDeBertaV3Config(
-		model_size="base",
+		model_name="microsoft-deberta-v3-base",
 		pooling="mean",
 		inference_device="mps",
 		batch_inference=True,
@@ -94,7 +93,7 @@ if __name__ == "__main__":
 
 	model_trainer = NNTrainer(
 		fastext_model_path=FASTTEXT_MODEL_PATH,
-		deberta_config=DEFAULT_DEBERTA_CONFIG,
+		deberta_config=deberta_config,
 	)
 
 	df = model_trainer.load_data()

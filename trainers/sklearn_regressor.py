@@ -1,5 +1,5 @@
 import xgboost as xgb
-import lightgbm as lgb
+# import lightgbm as lgb
 
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.dummy import DummyRegressor
@@ -10,7 +10,7 @@ from trainers.base_trainer import (
 	ModelTrainer
 )
 
-from config import FASTTEXT_MODEL_PATH, MSFTDeBertaV3Config, DEFAULT_DEBERTA_CONFIG
+from config import FASTTEXT_MODEL_PATH, MSFTDeBertaV3Config
 
 
 class SklearnRegressorTrainer(ModelTrainer):
@@ -18,8 +18,8 @@ class SklearnRegressorTrainer(ModelTrainer):
 	def __init__(
 			self,
 			model_type,
-			fastext_model_path=FASTTEXT_MODEL_PATH,
-			deberta_config: MSFTDeBertaV3Config = DEFAULT_DEBERTA_CONFIG,
+			fastext_model_path,
+			deberta_config: MSFTDeBertaV3Config,
 			target_columns=SCORE_COLUMNS,
 			feature_columns=FEATURE_COLUMNS,
 			train_file_name=None,
