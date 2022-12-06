@@ -41,7 +41,7 @@ TRAINING_PARAMS["xgb"] = dict(
 )
 
 
-TRAINING_PARAMS["lgbm"] = dict(
+TRAINING_PARAMS["lgb"] = dict(
 	boosting_type='gbdt',
 	num_leaves=15, #31
 	max_depth=14, #-1
