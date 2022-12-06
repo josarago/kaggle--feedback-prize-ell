@@ -2,7 +2,7 @@ import os
 import torch
 import platform
 
-KAGGLE_ROOT_DIR = "."
+KAGGLE_ROOT_DIR = "." if "arm64" in platform.platform() else "/kaggle"
 INPUT_DIR = "input"
 CHALLENGE_NAME = "feedback-prize-english-language-learning"
 SUBMISSION_DIR = "working"
