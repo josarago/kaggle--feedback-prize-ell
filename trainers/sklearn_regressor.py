@@ -60,8 +60,8 @@ class SklearnRegressorTrainer(ModelTrainer):
 			pca.fit(y)
 			self._model = TransformedTargetRegressor(
 				regressor=_model,
-				func=pca.transform,
-				inverse_func=pca.inverse_transform
+				func=pca.inverse_transform,
+				inverse_func=pca.transform
 			)
 		else:
 			self._model = _model
