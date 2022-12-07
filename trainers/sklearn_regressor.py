@@ -4,9 +4,6 @@ import lightgbm as lgb
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
-from sklearn.decomposition import PCA
-from sklearn.compose import TransformedTargetRegressor
-
 from trainers.base_trainer import (
 	SCORE_COLUMNS,
 	FEATURE_COLUMNS,
@@ -40,31 +37,21 @@ class SklearnRegressorTrainer(ModelTrainer):
 		)
 		self._model_type = model_type
 
-	def train(self, X, y, params=None, pca_on_target=True):
+	def train(self, X, y, params=None):
 		if self._model_type == "lgb":
 			print("creating LightGBM regressor")
-			_model = MultiOutputRegressor(lgb.LGBMRegressor(**params if params else {}))
+			self._model = MultiOutputRegressor(lgb.LGBMRegressor(**params if params else {}))
 		elif self._model_type == "xgb":
 			print("creating XGBoost regressor")
-			_model = MultiOutputRegressor(xgb.XGBRegressor(**params if params else {}))
+			self._model = MultiOutputRegressor(xgb.XGBRegressor(**params if params else {}))
 		elif self._model_type == "linear":
 			print("creating linear model")
-			_model = LinearRegression()
+			self._model = LinearRegression()
 		elif self._model_type == "dummy":
 			print("creating dummy model")
-			_model = DummyRegressor(strategy="mean")
+			self._model = DummyRegressor(strategy="mean")
 		else:
 			raise ValueError("unknown model type")
-		if pca_on_target:
-			pca = PCA(n_components=y.shape[1])
-			pca.fit(y)
-			self._model = TransformedTargetRegressor(
-				regressor=_model,
-				func=pca.transform,
-				inverse_func=pca.inverse_transform
-			)
-		else:
-			self._model = _model
 		self._model.fit(X, y)
 
 	def predict(self, X, recast_scores=True):
