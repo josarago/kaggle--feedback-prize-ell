@@ -54,7 +54,7 @@ class SequentialNeuralNetwork(nn.Module):
 				#                 nn.init.xavier_uniform(linear_layer.weight)
 				self._model.append(linear_layer)
 
-				self._model.append(nn.ReLU())
+				self._model.append(nn.GELU())
 			self._model.append(nn.Linear(self._hidden_dims[-1], self._output_dim, bias=True))
 			self._model.append(EllActivation(force_half_points=self._force_half_points))
 		else:
