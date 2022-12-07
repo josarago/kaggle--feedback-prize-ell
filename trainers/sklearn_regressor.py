@@ -1,5 +1,5 @@
 import xgboost as xgb
-# import lightgbm as lgb
+import lightgbm as lgb
 
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.dummy import DummyRegressor
@@ -10,7 +10,7 @@ from trainers.base_trainer import (
 	ModelTrainer
 )
 
-from config import FASTTEXT_MODEL_PATH, MSFTDeBertaV3Config
+from config import MSFTDeBertaV3Config
 
 
 class SklearnRegressorTrainer(ModelTrainer):
