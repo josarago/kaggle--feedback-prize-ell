@@ -87,17 +87,20 @@ if __name__ == "__main__":
 		output_device="cpu",
 		inference_batch_size=10
 	)
-	# model_trainer = SklearnRegressorTrainer(
-	# 	model_type="xgb",
-	# )
 
-	model_trainer = NNTrainer(
-		fastext_model_path=FASTTEXT_MODEL_PATH,
-		deberta_config=deberta_config,
+	model_trainer = SklearnRegressorTrainer(
+		model_type="xgb",
+		fastext_model_path = FASTTEXT_MODEL_PATH,
+		deberta_config = deberta_config,
 	)
 
+	# model_trainer = NNTrainer(
+	# 	fastext_model_path=FASTTEXT_MODEL_PATH,
+	# 	deberta_config=deberta_config,
+	# )
+
 	df = model_trainer.load_data()
-	df_features, y = model_trainer.get_training_set(df.iloc[:40])
+	df_features, y = model_trainer.get_training_set(df)
 	df_features_train, df_features_test, y_train, y_test = model_trainer.split_data(df_features, y, test_size=TEST_SIZE)
 	X_train = model_trainer._pipeline.fit_transform(df_features_train)
 	model_trainer.train(X_train, y_train, TRAINING_PARAMS["nn"])
