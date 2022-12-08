@@ -1,17 +1,17 @@
 # [Feedback Prize - English Language Learning](https://www.kaggle.com/competitions/feedback-prize-english-language-learning/overview)
  
-# My first(-ish) Kaggle competition
+## My first(-ish) Kaggle competition
 
 I'm new to Kaggle and wanted to take this challenge as an opportunity to :
 - learn how to compete in Kaggle. You might not realize it if you have been competing for a while, but there is a learning curve.
 - start using Pytorch (until now, I have been using Tensorflow for ANNs)
-- try to compete (I didn't get far during the competition because of lack of time)
+- see what I can learn about NLP
 
 ### Why you might want to read this
-Along the way I did a couple things you might find of interest:
-- I implemented a (very non exhaustive) list of function to [catch syntax errors](https://github.com/josarago/kaggle--feedback-prize-ell/blob/main/english_utils.py)
+Along the way I did a couple things you might find interesting:
 - The code is synced with the Github repo  through [Github Actions](https://github.com/josarago/kaggle--feedback-prize-ell/blob/main/.github/workflows/main.yml) which could be useful for your next competition
-- I implementing what I think is a weird but probably sometimes useful pattern, in a limited set of situations: I use the deberta model solely as a way to create a simple feature: Mean Pooling from the last hidden layer from a pretrained model. You probably generally want to fine tune the model on your task but was curious about what kind of score this more *out-of-the-box* approach would give. ~0.45 with either XGBoost, LightGBM or a relatively simple neural net. [The pretrained deberta model is wrapped in a sklearn transformer](https://github.com/josarago/kaggle--feedback-prize-ell/blob/fe7a51ce11021d2e773284addc16a08426228494/sklearn_transformers.py#L68)
+- I implementing what I think is a weird but probably sometimes useful pattern: I use the deberta model solely as a way to create a simple feature: Mean Pooling from the last hidden layer from a pretrained model. You probably generally want to fine tune the model on your task but was curious about what kind of score this more *out-of-the-box* approach would give. ~0.45 with either XGBoost, LightGBM or a relatively simple neural net. [The pretrained deberta model is wrapped in a sklearn transformer](https://github.com/josarago/kaggle--feedback-prize-ell/blob/fe7a51ce11021d2e773284addc16a08426228494/sklearn_transformers.py#L68)
+
 
 ## My approach
 ### Setting things up
