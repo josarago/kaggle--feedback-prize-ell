@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 
 from transformers import AutoTokenizer, AutoModel
 
+from config import MSFTDeBertaV3Config
 from english_utils import clean_special_characters
 
 
@@ -67,7 +68,7 @@ class FTLangdetectTransformer(BaseEstimator, TransformerMixin):
 
 class PooledDeBertaTransformer(BaseEstimator, TransformerMixin):
 	def __init__(self, config):
-		self.config = config
+		self.config: MSFTDeBertaV3Config = config
 		self.tokenizer = AutoTokenizer.from_pretrained(self.config.tokenizer)
 		self.model = AutoModel.from_pretrained(self.config.model).to(
 			self.config.inference_device
