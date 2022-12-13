@@ -105,7 +105,6 @@ if __name__ == "__main__":
 	X_test = model_trainer._pipeline.transform(df_features_test)
 	y_pred = model_trainer.predict(X_test)
 	print(model_trainer.evaluate(y_test, y_pred))
-	print("Excuse you.")
 
 
 
