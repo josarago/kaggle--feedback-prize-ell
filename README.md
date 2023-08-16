@@ -43,7 +43,7 @@ I then created a few features:
   - **total number of unigram used**: we said earlier that longer essays tend to have better ratings. 
   - **number of line breaks**: this is arguably a bit funny but an attempt to capture the fact that better essays have a better structure.
 
-As you might expect that would not get us very far, these are actually not great first choices, but I was just curious what would happen. I'm not planning of doing a systematic breakdown of feature importances and I'm at work trying to deliver value ASAP so I just wanted to see what these vaguely relevant features would give me. We should still see some progress. Using a Linear Regression model with these simple features gets us to **0.616**. This is not impressive by any mean, but we are moving in the right direction.
+As you might expect that would not get us very far, these are actually not great first choices, but I was just curious what would happen. I'm not planning of doing a systematic breakdown of feature importances and I just wanted to see what these vaguely relevant features would give me. We should still see some progress. Using a Linear Regression model with these simple features gets us to **0.616**. This is not impressive by any mean, but we are moving in the right direction.
 
 ### More features and tree based model
 I then kept going adding features that were easy to implement although unlikely to cause a huge improvement in the score. I just wanted to see how far I could go using simple but highly interpretable features:
