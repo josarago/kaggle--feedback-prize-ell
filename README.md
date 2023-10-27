@@ -18,7 +18,7 @@ Along the way, I've built and come across a few things that are hopefully worth 
 - **Some thoughts I share about the competition format**: again I am new to Kaggle so if my thoughts are naive or misguided, I would love to hear different point of views.
 
 
-## Summary my approach
+## Summary of the approach
 I'll describe briefly the steps I took to get to 0.45. Again, this is far from being the best solution but it gets us *90% of the way* and is relatively low effort.
 
 ### EDA
